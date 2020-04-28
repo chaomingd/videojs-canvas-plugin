@@ -134,7 +134,7 @@ function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.g
 
 
 
-var Plugin = video_js__WEBPACK_IMPORTED_MODULE_0___default.a.getPlugin("plugin");
+var Plugin = video_js__WEBPACK_IMPORTED_MODULE_0___default.a.getPlugin('plugin');
 
 var VideoCanvasPlugin = /*#__PURE__*/function (_Plugin) {
   _inherits(VideoCanvasPlugin, _Plugin);
@@ -152,6 +152,7 @@ var VideoCanvasPlugin = /*#__PURE__*/function (_Plugin) {
     _this.videoWidth = 0;
     _this.videoHeight = 0;
     _this.player = player;
+    _this._listeners = {};
 
     _this.initCanvasEl(player);
 
@@ -165,49 +166,98 @@ var VideoCanvasPlugin = /*#__PURE__*/function (_Plugin) {
 
       if (this.canvasEl) {
         this.cancelDrawVideoFrame();
-        this.canvasEl.removeEventListener("click", this.canvasClick);
+        this.canvasEl.removeEventListener('click', this.canvasClick);
       }
+
+      this.removeAllListener();
+    }
+  }, {
+    key: "removeAllListener",
+    value: function removeAllListener() {
+      var _this2 = this;
+
+      var _loop = function _loop(type) {
+        var events = _this2._listeners[type];
+        events.forEach(function (fn) {
+          _this2.player.off(type, fn);
+        });
+      };
+
+      for (var type in this._listeners) {
+        _loop(type);
+      }
+    }
+  }, {
+    key: "addEvent",
+    value: function addEvent(type, fn) {
+      this.player.on(type, fn);
+      !this._listeners[type] && (this._listeners[type] = []);
+
+      this._listeners[type].push(fn);
     }
   }, {
     key: "initCanvasEl",
     value: function initCanvasEl(player) {
-      var _this2 = this;
+      var _this3 = this;
 
       var isVideoHidden = false;
       this.canvasClick = this.canvasClick.bind(this);
-      player.on("loadedmetadata", function () {
-        if (_this2.isDisposed) return;
-        _this2.canvasEl = document.createElement("canvas");
-        _this2.rootEl = _this2.player.el();
-        _this2.videoEl = _this2.rootEl.getElementsByTagName("video")[0];
-        _this2.canvasEl.width = _this2.videoWidth = player.videoWidth();
-        _this2.canvasEl.height = _this2.videoHeight = player.videoHeight();
-        _this2.canvasEl.style.cssText = "\n        position: absolute;\n        top: 50%;\n        left: 50%;\n        transform: translate(-50%,-50%);\n      ";
+      this.addEvent('loadedmetadata', function () {
+        if (_this3.isDisposed) return;
+        if (_this3.canvasEl) return;
+        _this3.canvasEl = document.createElement('canvas');
+        _this3.rootEl = _this3.player.el();
+        _this3.videoEl = _this3.rootEl.getElementsByTagName('video')[0];
+        _this3.canvasEl.width = _this3.videoWidth = player.videoWidth();
+        _this3.canvasEl.height = _this3.videoHeight = player.videoHeight();
+        _this3.canvasEl.style.cssText = "\n        position: absolute;\n        top: 50%;\n        left: 50%;\n        transform: translate(-50%,-50%);\n      ";
 
-        _this2.setCanvasContainInContainer();
+        _this3.setCanvasContainInContainer();
 
-        _this2.canvasEl.addEventListener("click", _this2.canvasClick);
+        _this3.canvasEl.addEventListener('click', _this3.canvasClick);
 
-        _this2.ctx = _this2.canvasEl.getContext("2d");
+        _this3.ctx = _this3.canvasEl.getContext('2d');
 
-        _this2.rootEl.insertBefore(_this2.canvasEl, _this2.rootEl.firstElementChild);
+        _this3.rootEl.insertBefore(_this3.canvasEl, _this3.rootEl.firstElementChild);
       });
-      player.on("play", function () {
-        _this2.cancelDrawVideoFrame();
-
-        _this2.stopDrawVideoFrame = _this2.drawVideoFrame();
+      this.addEvent('play', function () {
+        console.log('play');
+        _this3.stopDrawVideoFrame = _this3.drawVideoFrame();
 
         if (!isVideoHidden) {
-          _this2.videoEl.style.width = "1px";
-          _this2.videoEl.style.height = "1px";
-          _this2.videoEl.style.visibility = "hidden";
+          _this3.videoEl.style.width = '1px';
+          _this3.videoEl.style.height = '1px';
+          _this3.videoEl.style.visibility = 'hidden';
           isVideoHidden = true;
         }
       });
-      player.on("pause", function () {
-        _this2.cancelDrawVideoFrame();
+      this.addEvent('timeupdate', function () {
+        if (!_this3.stopDrawVideoFrame) {
+          _this3.stopDrawVideoFrame = _this3.drawVideoFrame();
+        }
       });
-      player.on("fullscreenchange", this.setCanvasContainInContainer.bind(this));
+      this.addEvent('pause', function () {
+        console.log('pause');
+
+        _this3.cancelDrawVideoFrame();
+      });
+      this.addEvent('fullscreenchange', this.setCanvasContainInContainer.bind(this));
+      this.addEvent('error', function () {
+        _this3.cancelDrawVideoFrame();
+      });
+      this.addEvent('abort', function () {
+        console.log('abort');
+
+        _this3.cancelDrawVideoFrame();
+      });
+      this.addEvent('waiting', function () {
+        console.log('waiting');
+
+        _this3.cancelDrawVideoFrame();
+      });
+      this.addEvent('ended', function () {
+        _this3.cancelDrawVideoFrame();
+      });
     }
   }, {
     key: "setCanvasContainInContainer",
@@ -227,6 +277,7 @@ var VideoCanvasPlugin = /*#__PURE__*/function (_Plugin) {
   }, {
     key: "frameCall",
     value: function frameCall(callback) {
+      // draw 30 times per second
       var count = 0,
           id = null;
 
@@ -257,13 +308,13 @@ var VideoCanvasPlugin = /*#__PURE__*/function (_Plugin) {
       if (rectRatio < containerRatio) {
         resultRect.width = container.width;
         resultRect.height = resultRect.width * rectRatio;
-        resultRect.widthPercent = "100%";
-        resultRect.heightPercent = "auto";
+        resultRect.widthPercent = '100%';
+        resultRect.heightPercent = 'auto';
       } else {
         resultRect.height = container.height;
         resultRect.width = resultRect.height / rectRatio;
-        resultRect.widthPercent = "auto";
-        resultRect.heightPercent = "100%";
+        resultRect.widthPercent = 'auto';
+        resultRect.heightPercent = '100%';
       }
 
       return resultRect;
@@ -271,13 +322,14 @@ var VideoCanvasPlugin = /*#__PURE__*/function (_Plugin) {
   }, {
     key: "drawVideoFrame",
     value: function drawVideoFrame() {
-      var _this3 = this;
+      var _this4 = this;
 
+      this.cancelDrawVideoFrame();
       var canvas = this.canvasEl;
       return this.frameCall(function () {
-        _this3.ctx.clearRect(0, 0, _this3.ctx.canvas.width, canvas.height);
+        _this4.ctx.clearRect(0, 0, _this4.ctx.canvas.width, canvas.height);
 
-        _this3.ctx.drawImage(_this3.videoEl, 0, 0, canvas.width, canvas.height);
+        _this4.ctx.drawImage(_this4.videoEl, 0, 0, canvas.width, canvas.height);
       });
     }
   }, {
@@ -301,7 +353,7 @@ var VideoCanvasPlugin = /*#__PURE__*/function (_Plugin) {
 }(Plugin);
 
 if (!video_js__WEBPACK_IMPORTED_MODULE_0___default.a.getPlugin('VideoCanvasPlugin')) {
-  video_js__WEBPACK_IMPORTED_MODULE_0___default.a.registerPlugin("VideoCanvasPlugin", VideoCanvasPlugin);
+  video_js__WEBPACK_IMPORTED_MODULE_0___default.a.registerPlugin('VideoCanvasPlugin', VideoCanvasPlugin);
 }
 
 /* harmony default export */ __webpack_exports__["default"] = (VideoCanvasPlugin);

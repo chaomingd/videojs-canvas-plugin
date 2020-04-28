@@ -1,7 +1,6 @@
-import videojs from "video.js";
+import videojs from 'video.js';
 import 'window.requestanimationframe';
-
-const Plugin = videojs.getPlugin("plugin");
+const Plugin = videojs.getPlugin('plugin');
 
 class VideoCanvasPlugin extends Plugin {
   constructor(player, options) {
@@ -11,6 +10,7 @@ class VideoCanvasPlugin extends Plugin {
     this.videoWidth = 0;
     this.videoHeight = 0;
     this.player = player;
+    this._listeners = {}
     this.initCanvasEl(player);
   }
 
@@ -18,18 +18,36 @@ class VideoCanvasPlugin extends Plugin {
     this.isDisposed = true;
     if (this.canvasEl) {
       this.cancelDrawVideoFrame();
-      this.canvasEl.removeEventListener("click", this.canvasClick);
+      this.canvasEl.removeEventListener('click', this.canvasClick);
+    }
+    this.removeAllListener();
+  }
+
+  removeAllListener() {
+    for (let type in this._listeners) {
+      let events = this._listeners[type];
+      events.forEach(fn => {
+        this.player.off(type, fn);
+      })
     }
   }
+
+  addEvent(type, fn) {
+    this.player.on(type, fn);
+    !this._listeners[type] && (this._listeners[type] = []);
+    this._listeners[type].push(fn);
+  }
+
 
   initCanvasEl(player) {
     let isVideoHidden = false;
     this.canvasClick = this.canvasClick.bind(this);
-    player.on("loadedmetadata", () => {
+    this.addEvent('loadedmetadata', () => {
       if (this.isDisposed) return;
-      this.canvasEl = document.createElement("canvas");
+      if (this.canvasEl) return;
+      this.canvasEl = document.createElement('canvas');
       this.rootEl = this.player.el();
-      this.videoEl = this.rootEl.getElementsByTagName("video")[0];
+      this.videoEl = this.rootEl.getElementsByTagName('video')[0];
       this.canvasEl.width = this.videoWidth = player.videoWidth();
       this.canvasEl.height = this.videoHeight = player.videoHeight();
       this.canvasEl.style.cssText = `
@@ -39,37 +57,57 @@ class VideoCanvasPlugin extends Plugin {
         transform: translate(-50%,-50%);
       `;
       this.setCanvasContainInContainer();
-      this.canvasEl.addEventListener("click", this.canvasClick);
-      this.ctx = this.canvasEl.getContext("2d");
+      this.canvasEl.addEventListener('click', this.canvasClick);
+      this.ctx = this.canvasEl.getContext('2d');
       this.rootEl.insertBefore(this.canvasEl, this.rootEl.firstElementChild);
-    });
-    player.on("play", () => {
-      this.cancelDrawVideoFrame();
+    })
+    this.addEvent('play', () => {
+      console.log('play')
       this.stopDrawVideoFrame = this.drawVideoFrame();
       if (!isVideoHidden) {
-        this.videoEl.style.width = "1px";
-        this.videoEl.style.height = "1px";
-        this.videoEl.style.visibility = "hidden";
+        this.videoEl.style.width = '1px';
+        this.videoEl.style.height = '1px';
+        this.videoEl.style.visibility = 'hidden';
         isVideoHidden = true;
       }
-    });
-    player.on("pause", () => {
+    })
+    this.addEvent('timeupdate', () => {
+      if (!this.stopDrawVideoFrame) {
+        this.stopDrawVideoFrame = this.drawVideoFrame();
+      }
+    })
+    this.addEvent('pause', () => {
+      console.log('pause')
       this.cancelDrawVideoFrame();
-    });
-    player.on("fullscreenchange", this.setCanvasContainInContainer.bind(this));
+    })
+    this.addEvent('fullscreenchange', this.setCanvasContainInContainer.bind(this));
+    this.addEvent('error', () => {
+      this.cancelDrawVideoFrame();
+    })
+    this.addEvent('abort', () => {
+      console.log('abort')
+      this.cancelDrawVideoFrame();
+    })
+    this.addEvent('waiting', () => {
+      console.log('waiting')
+      this.cancelDrawVideoFrame();
+    })
+    this.addEvent('ended', () => {
+      this.cancelDrawVideoFrame();
+    })
   }
   setCanvasContainInContainer() {
     let containerRect;
-    if(this.player.isFullscreen()) {
+    if (this.player.isFullscreen()) {
       containerRect = this.rootEl.getBoundingClientRect();
-    }else {
+    } else {
       containerRect = window.screen;
     }
     let rect = this.contain(containerRect, this.canvasEl);
     this.canvasEl.style.width = rect.widthPercent;
     this.canvasEl.style.height = rect.heightPercent;
   }
-  frameCall(callback) {
+  frameCall(callback) { // draw 30 times per second
     let count = 0,
       id = null;
     function frame() {
@@ -94,17 +132,18 @@ class VideoCanvasPlugin extends Plugin {
     if (rectRatio < containerRatio) {
       resultRect.width = container.width;
       resultRect.height = resultRect.width * rectRatio;
-      resultRect.widthPercent = "100%";
-      resultRect.heightPercent = "auto";
+      resultRect.widthPercent = '100%';
+      resultRect.heightPercent = 'auto';
     } else {
       resultRect.height = container.height;
       resultRect.width = resultRect.height / rectRatio;
-      resultRect.widthPercent = "auto";
-      resultRect.heightPercent = "100%";
+      resultRect.widthPercent = 'auto';
+      resultRect.heightPercent = '100%';
     }
     return resultRect;
   }
   drawVideoFrame() {
+    this.cancelDrawVideoFrame();
     var canvas = this.canvasEl;
     return this.frameCall(() => {
       this.ctx.clearRect(0, 0, this.ctx.canvas.width, canvas.height);
@@ -125,7 +164,7 @@ class VideoCanvasPlugin extends Plugin {
 }
 
 if (!videojs.getPlugin('VideoCanvasPlugin')) {
-  videojs.registerPlugin("VideoCanvasPlugin", VideoCanvasPlugin);
+  videojs.registerPlugin('VideoCanvasPlugin', VideoCanvasPlugin);
 }
 
 export default VideoCanvasPlugin;
