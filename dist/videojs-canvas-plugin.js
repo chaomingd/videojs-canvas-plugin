@@ -108,8 +108,8 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__0__;
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var video_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(0);
 /* harmony import */ var video_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(video_js__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var window_requestanimationframe__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(2);
-/* harmony import */ var window_requestanimationframe__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(window_requestanimationframe__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _requestanimationframe__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(2);
+/* harmony import */ var _requestanimationframe__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_requestanimationframe__WEBPACK_IMPORTED_MODULE_1__);
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -186,6 +186,8 @@ var VideoCanvasPlugin = /*#__PURE__*/function (_Plugin) {
       for (var type in this._listeners) {
         _loop(type);
       }
+
+      this._listeners = {};
     }
   }, {
     key: "addEvent",
@@ -371,47 +373,28 @@ if (!video_js__WEBPACK_IMPORTED_MODULE_0___default.a.getPlugin('VideoCanvasPlugi
  * github.com/Polyfiller/requestAnimationFrame
  */
 window.requestAnimationFrame || function () {
+  'use strict';
 
-    'use strict';
+  window.requestAnimationFrame = window.msRequestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || function () {
+    var fps = 60;
+    var delay = 1000 / fps;
+    var animationStartTime = Date.now();
+    var previousCallTime = animationStartTime;
+    return function requestAnimationFrame(callback) {
+      var requestTime = Date.now();
+      var timeout = Math.max(0, delay - (requestTime - previousCallTime));
+      var timeToCall = requestTime + timeout;
+      previousCallTime = timeToCall;
+      return window.setTimeout(function onAnimationFrame() {
+        callback(timeToCall - animationStartTime);
+      }, timeout);
+    };
+  }();
 
-    window.requestAnimationFrame = window.msRequestAnimationFrame
-    || window.mozRequestAnimationFrame
-    || window.webkitRequestAnimationFrame
-    || function () {
-
-        var fps = 60;
-        var delay = 1000 / fps;
-        var animationStartTime = Date.now();
-        var previousCallTime = animationStartTime;
-
-        return function requestAnimationFrame(callback) {
-
-            var requestTime = Date.now();
-            var timeout = Math.max(0, delay - (requestTime - previousCallTime));
-            var timeToCall = requestTime + timeout;
-
-            previousCallTime = timeToCall;
-
-            return window.setTimeout(function onAnimationFrame() {
-
-                callback(timeToCall - animationStartTime);
-
-            }, timeout);
-        };
-    }();
-
-    window.cancelAnimationFrame = window.mozCancelAnimationFrame
-    || window.webkitCancelAnimationFrame
-    || window.cancelRequestAnimationFrame
-    || window.msCancelRequestAnimationFrame
-    || window.mozCancelRequestAnimationFrame
-    || window.webkitCancelRequestAnimationFrame
-    || function cancelAnimationFrame(id) {
-           window.clearTimeout(id);
-       };
-
+  window.cancelAnimationFrame = window.mozCancelAnimationFrame || window.webkitCancelAnimationFrame || window.cancelRequestAnimationFrame || window.msCancelRequestAnimationFrame || window.mozCancelRequestAnimationFrame || window.webkitCancelRequestAnimationFrame || function cancelAnimationFrame(id) {
+    window.clearTimeout(id);
+  };
 }();
-
 
 /***/ })
 /******/ ]);

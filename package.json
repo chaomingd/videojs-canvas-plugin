@@ -1,8 +1,9 @@
 {
   "name": "videojs-canvas-plugin",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "use canvas to render video for videojs",
-  "main": "dist/videojs-canvas-plugin.js",
+  "main": "./dist/videojs-canvas-plugin.js",
+  "module": "./src/plugin.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "webpack",
@@ -25,9 +26,6 @@
     "url": "https://github.com/chaomingd/videojs-canvas-plugin/issues"
   },
   "homepage": "https://github.com/chaomingd/videojs-canvas-plugin#readme",
-  "dependencies": {
-    "window.requestanimationframe": "^1.0.1"
-  },
   "peerDependencies": {
     "video.js": "^7.7.5"
   },

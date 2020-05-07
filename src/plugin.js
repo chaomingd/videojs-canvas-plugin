@@ -1,5 +1,5 @@
 import videojs from 'video.js';
-import 'window.requestanimationframe';
+import './requestanimationframe';
 const Plugin = videojs.getPlugin('plugin');
 
 class VideoCanvasPlugin extends Plugin {
@@ -30,6 +30,7 @@ class VideoCanvasPlugin extends Plugin {
         this.player.off(type, fn);
       })
     }
+    this._listeners = {};
   }
 
   addEvent(type, fn) {

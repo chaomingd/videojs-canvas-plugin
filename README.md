@@ -17,8 +17,5 @@ npm i videojs-canvas-plugin -S
   player.VideoCanvasPlugin(); // use canvas render
 ```
 
-# Dependencies
-this plugin requieres window.requestanimationframe
-
 # License
 this plugin is released under the MIT license.
