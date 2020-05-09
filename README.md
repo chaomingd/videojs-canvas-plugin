@@ -17,5 +17,11 @@ npm i videojs-canvas-plugin -S
   player.VideoCanvasPlugin(); // use canvas render
 ```
 
+# Use cases
+  Video tag is at the top level when video is played by low version browser and app embedded browser on mobile phone,
+Using canvas to render video can eliminate this side effect.
+
+
+
 # License
 this plugin is released under the MIT license.

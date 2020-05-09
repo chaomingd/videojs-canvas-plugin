@@ -1,6 +1,6 @@
 {
   "name": "videojs-canvas-plugin",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "use canvas to render video for videojs",
   "main": "dist/videojs-canvas-plugin.js",
   "scripts": {
