@@ -228,6 +228,9 @@
         });
         this.addEvent('play', function () {
           console.log('play');
+
+          _this3.setCanvasContainInContainer();
+
           _this3.stopDrawVideoFrame = _this3.drawVideoFrame();
 
           if (!isVideoHidden) {
@@ -268,14 +271,8 @@
     }, {
       key: "setCanvasContainInContainer",
       value: function setCanvasContainInContainer() {
-        var containerRect;
-
-        if (this.player.isFullscreen()) {
-          containerRect = this.rootEl.getBoundingClientRect();
-        } else {
-          containerRect = window.screen;
-        }
-
+        if (!this.canvasEl) return;
+        var containerRect = this.rootEl.getBoundingClientRect();
         var rect = this.contain(containerRect, this.canvasEl);
         this.canvasEl.style.width = rect.widthPercent;
         this.canvasEl.style.height = rect.heightPercent;
@@ -284,16 +281,10 @@
       key: "frameCall",
       value: function frameCall(callback) {
         // draw 30 times per second
-        var count = 0,
-            id = null;
+        var id;
 
         function frame() {
-          if (count === 1) {
-            callback();
-            count = -1;
-          }
-
-          count++;
+          callback && callback();
           id = window.requestAnimationFrame(frame);
         }
 
