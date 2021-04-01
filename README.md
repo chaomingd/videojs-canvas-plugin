@@ -9,6 +9,7 @@ npm i videojs-canvas-plugin -S
 ```javascript
   import videojs from 'video.js';
   import 'videojs-canvas-plugin';
+  import 'video.js/dist/video-js.min.css' // import videojs css
   const player = videojs('videoId',{
     constrols: true,
     poster: 'xxx.jpg',

@@ -109,14 +109,9 @@ class VideoCanvasPlugin extends Plugin {
     this.canvasEl.style.height = rect.heightPercent;
   }
   frameCall(callback) { // draw 30 times per second
-    let count = 0,
-      id = null;
+    let id
     function frame() {
-      if (count === 1) {
-        callback();
-        count = -1;
-      }
-      count++;
+      callback && callback()
       id = window.requestAnimationFrame(frame);
     }
     id = window.requestAnimationFrame(frame);
