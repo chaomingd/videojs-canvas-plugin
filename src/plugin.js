@@ -64,6 +64,7 @@ class VideoCanvasPlugin extends Plugin {
     })
     this.addEvent('play', () => {
       console.log('play')
+      this.setCanvasContainInContainer();
       this.stopDrawVideoFrame = this.drawVideoFrame();
       if (!isVideoHidden) {
         this.videoEl.style.width = '1px';
@@ -98,12 +99,8 @@ class VideoCanvasPlugin extends Plugin {
     })
   }
   setCanvasContainInContainer() {
-    let containerRect;
-    if (this.player.isFullscreen()) {
-      containerRect = this.rootEl.getBoundingClientRect();
-    } else {
-      containerRect = window.screen;
-    }
+    if (!this.canvasEl) return
+    let containerRect = this.rootEl.getBoundingClientRect();
     let rect = this.contain(containerRect, this.canvasEl);
     this.canvasEl.style.width = rect.widthPercent;
     this.canvasEl.style.height = rect.heightPercent;
